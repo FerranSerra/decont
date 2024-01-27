@@ -18,52 +18,59 @@
 #   If $4 == "another" only the **first two sequence** should be output
 
 
-# Check if the number of arguments is less than 2
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 <file_url> <output_directory>"
+# Verifica si se proporcionaron al menos dos argumentos
+if [ "$#" -lt 2 ]; then
+    echo "Uso: $0 URL DESTINO [DES-COMPRESIÓN] [PALABRA_FILTRO]"
     exit 1
 fi
 
-file_url="$1"
-output_directory="$2"
-filename=$(basename "$file_url")
-output_file="$output_directory/$filename"
+URL=$1
+NOMBRE_ARCHIVO=$(basename "$URL")
+DESTINO="$2/$NOMBRE_ARCHIVO"
+DECOMPRESION=${3:-no}  # Valor predeterminado es "no"
+PALABRA_FILTRO=$4
 
-# Check if the output file already exists
-if [ -e "$output_file" ]; then
-    echo "Output file '$output_file' already exists. Skipping the operation."
-    exit 0
-fi
-
-# Download the file
-wget -O "$output_file" "$file_url"
-
-# Check if the download was successful
-if [ $? -ne 0 ]; then
-    echo "Error downloading file from $file_url"
-    exit 1
-fi
-
-# Calculate the MD5 checksum of the downloaded file
-downloaded_md5=$(md5sum "$output_file" | awk '{print $1}')
-
-# Append ".md5" to the file URL to get the URL of the MD5 checksum
-md5_url="${file_url}.md5"
-
-# Download the content of the .md5 file (without downloading the .md5 file itself)
-md5_content=$(wget -qO- "$md5_url")
-
-# Extract the expected MD5 checksum from the content
-expected_md5=$(echo "$md5_content" | awk '{print $1}')
-
-# Compare the calculated MD5 checksum with the expected one
-if [ "$downloaded_md5" != "$expected_md5" ]; then
-    echo "MD5 checksum mismatch for $output_file. Expected: $expected_md5, Calculated: $downloaded_md5"
-    exit 1
+# Verificar si el archivo ya existe
+if [ -f "$DESTINO" ]; then
+    echo "El archivo $NOMBRE_ARCHIVO ya existe. Omitiendo descarga."
 else
-    echo "MD5 checksum matched for $output_file"
+    # Descargar el archivo y verificar MD5
+    wget -O "$DESTINO" "$URL" && \
+    MD5_HASH_URL=$(wget -qO- "${URL}.md5" | awk '{ print $1 }') && \
+    MD5_HASH_ARCHIVO=$(md5sum "$DESTINO" | awk '{ print $1 }') && \
+    
+    #Comprobación de los hashes MD5 para depuración
+    #echo "MD5 esperado: $MD5_HASH_URL"
+    #echo "MD5 obtenido: $MD5_HASH_ARCHIVO"
+    
+    if [ "$MD5_HASH_URL" != "$MD5_HASH_ARCHIVO" ]; then
+        echo "La verificación MD5 falló para $NOMBRE_ARCHIVO. Eliminando archivo."
+        rm "$DESTINO"
+        exit 1
+    else
+        echo "Archivo descargado y verificado correctamente: $NOMBRE_ARCHIVO"
+    fi
 fi
 
-echo "Download and MD5 check completed successfully for $output_file"
+# Opcionalmente descomprime el archivo
+if [ "$DECOMPRESION" == "yes" ] && [[ "$NOMBRE_ARCHIVO" == *.gz ]]; then
+    # Descomprime el archivo y lo renombra (eliminando la extensión .gz)
+    gunzip -c "$DESTINO" > "${DESTINO%.*}"
+    if [ $? -eq 0 ]; then
+        echo "Archivo descomprimido correctamente."
+        # Actualiza la variable DESTINO para que apunte al archivo descomprimido
+        DESTINO="${DESTINO%.*}"
+    else
+        echo "Error al descomprimir el archivo."
+        exit 1
+    fi
+fi
 
- 
+# Filtra las secuencias basado en la palabra del encabezado
+if [ -n "$PALABRA_FILTRO" ]; then
+    awk -v palabra="$PALABRA_FILTRO" 'BEGIN{print_seq=1} /^>/{print_seq=($0 !~ palabra)} {if(print_seq) print}' "$DESTINO" > "${DESTINO}.filtrado"
+    mv "${DESTINO}.filtrado" "$DESTINO"
+fi
+
+
+echo "Archivo procesado y guardado en ${DESTINO%.*}"
