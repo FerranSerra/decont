@@ -16,13 +16,15 @@ done
 
 # Download the contaminants fasta file, uncompress it, and
 # filter to remove all small nuclear RNAs
-bash scripts/download.sh https://bioinformatics.cnio.es/data/courses/decont/contaminants.fasta.gz res yes 
+bash scripts/download.sh https://bioinformatics.cnio.es/data/courses/decont/contaminants.fasta.gz res yes "small nuclear" 
 
 # Index the contaminants file
 bash scripts/index.sh res/contaminants.fasta res/contaminants_idx
 
 # Merge the samples into a single file
-for sid in $(<list_of_sample_ids>) #TODO
+## Ruta al archivo que contiene las samples
+path="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont/data"
+for sid in $(ls $path/*.fastq.gz | cut -d'-' -f1 | awk -F"data/" '{print $2}' | sort | uniq)
 do
     bash scripts/merge_fastqs.sh data out/merged $sid
 done

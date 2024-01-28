@@ -20,7 +20,7 @@
 
 # Verifica si se proporcionaron al menos dos argumentos
 if [ "$#" -lt 2 ]; then
-    echo "Uso: $0 URL DESTINO [DES-COMPRESIÓN] [PALABRA_FILTRO]"
+    echo "Uso: $0 URL DESTINO [DESCOMPRESIÓN] [PALABRA_FILTRO]"
     exit 1
 fi
 
@@ -73,4 +73,4 @@ if [ -n "$PALABRA_FILTRO" ]; then
 fi
 
 
-echo "Archivo procesado y guardado en ${DESTINO%.*}"
+echo "Archivo procesado y guardado en $DESTINO"

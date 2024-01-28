@@ -1,14 +1,7 @@
-# Ruta al archivo que contiene las URLs de los archivos a descargar
-filename_file="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont/data/urls"
-
-# Verifica si el archivo de nombres de archivo existe
-if [ ! -f "$filename_file" ]; then
-    echo "El archivo $filename_file no existe."
-    exit 1
-fi
-
-#Download all the files specified in data/urls
-for url in $(cat "$filename_file") 
+# Merge the samples into a single file
+## Ruta al archivo que contiene las samples
+path="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont/data"
+for sid in $(ls $path/*.fastq.gz | cut -d'-' -f1 | awk -F"data/" '{print $2}' | sort | uniq)
 do
-    bash scripts/download.sh $url data
+    bash scripts/merge_fastqs.sh data out/merged $sid
 done
