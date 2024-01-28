@@ -1,5 +1,6 @@
 # Ruta al archivo que contiene las URLs de los archivos a descargar
 filename_file="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont/data/urls"
+working_dir="home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont"
 
 # Verifica si el archivo de nombres de archivo existe
 if [ ! -f "$filename_file" ]; then
@@ -29,11 +30,28 @@ do
     bash scripts/merge_fastqs.sh data out/merged $sid
 done
 
-# TODO: run cutadapt for all merged files
-# cutadapt -m 18 -a TGGAATTCTCGGGTGCCAAGG --discard-untrimmed \
-#     -o <trimmed_file> <input_file> > <log_file>
+# run cutadapt for all merged files
 
-# TODO: run STAR for all trimmed files
+echo "Running cutadapt for merged files"
+##Make directories for trimmed and log files
+mkdir -p "${working_dir}/out/trimmed"
+mkdir -p "${working_dir}/log/cutadapt"
+for file in "${working_dir}/out/merged/"*.fastq.gz; do
+    #Extraer el nombre del archivo 
+    base_name=$(basename "$file" .fastq.gz)
+    
+    #Definir el trimmed y el log
+    trimmed_file="${working_dir}/out/trimmed/${base_name}.trimmed.fastq.gz"
+    log_file="${working_dir}/log/cutadapt/${base_name}.log"
+    
+    #Ejecutar cutadapt y redirigir la salida al archivo de log
+    cutadapt -m 18 -a TGGAATTCTCGGGTGCCAAGG --discard-untrimmed \
+     -o "$trimmed_file" "$file" > "$log_file"
+done
+
+echo "Cutadapt ended"
+
+# run STAR for all trimmed files
 for fname in out/trimmed/*.fastq.gz
 do
     # you will need to obtain the sample ID from the filename
