@@ -1,10 +1,9 @@
-working_dir="home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont"
+working_dir="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont"
 
-# run cutadapt for all merged files
 echo "Running cutadapt for merged files"
 ##Make directories for trimmed and log files
-mkdir -p "${working_dir}/out/trimmed"
-mkdir -p "${working_dir}/log/cutadapt"
+mkdir -p out/trimmed
+mkdir -p log/cutadapt
 for file in "${working_dir}/out/merged/"*.fastq.gz; do
     #Extraer el nombre del archivo 
     base_name=$(basename "$file" .fastq.gz)
