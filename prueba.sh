@@ -1,20 +1,12 @@
 working_dir="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont"
 
-echo "Running cutadapt for merged files"
-##Make directories for trimmed and log files
-mkdir -p out/trimmed
-mkdir -p log/cutadapt
-for file in "${working_dir}/out/merged/"*.fastq.gz; do
-    #Extraer el nombre del archivo 
-    base_name=$(basename "$file" .fastq.gz)
-    
-    #Definir el trimmed y el log
-    trimmed_file="${working_dir}/out/trimmed/${base_name}.trimmed.fastq.gz"
-    log_file="${working_dir}/log/cutadapt/${base_name}.log"
-    
-    #Ejecutar cutadapt y redirigir la salida al archivo de log
-    cutadapt -m 18 -a TGGAATTCTCGGGTGCCAAGG --discard-untrimmed \
-     -o "$trimmed_file" "$file" > "$log_file"
-done
-
-echo "Cutadapt ended"
+# run STAR for all trimmed files
+for fname in "${working_dir}/out/trimmed/"*.fastq.gz
+do
+    # you will need to obtain the sample ID from the filename
+    sid=$(basename "$fname" .trimmed.fastq.gz)
+    mkdir -p out/star/$sid
+    STAR --runThreadN 4 --genomeDir res/contaminants_idx \
+         --outReadsUnmapped Fastx --readFilesIn "$fname" \
+         --readFilesCommand gunzip -c --outFileNamePrefix "${working_dir}/out/star/${sid}/"
+done 

@@ -1,6 +1,6 @@
 # Ruta al archivo que contiene las URLs de los archivos a descargar
 filename_file="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont/data/urls"
-working_dir="home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont"
+working_dir="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont"
 
 # Verifica si el archivo de nombres de archivo existe
 if [ ! -f "$filename_file" ]; then
@@ -34,8 +34,8 @@ done
 
 echo "Running cutadapt for merged files"
 ##Make directories for trimmed and log files
-mkdir -p "${working_dir}/out/trimmed"
-mkdir -p "${working_dir}/log/cutadapt"
+mkdir -p out/trimmed
+mkdir -p log/cutadapt
 for file in "${working_dir}/out/merged/"*.fastq.gz; do
     #Extraer el nombre del archivo 
     base_name=$(basename "$file" .fastq.gz)
