@@ -78,7 +78,7 @@ do
     timestamp=$(date +"%Y-%m-%d %H:%M:%S")
     
     #Añadir dos saltos de línea para el primer registro del log (primera ejecución de este for)
-    if ["$first_run" = true ]; then
+    if [ "$first_run" = true ]; then
         echo -e "\n\nCUTADAPT $base_name $timestamp\n" >> "${working_dir}/log/pipeline.log"
         first_run=false
     else 
