@@ -1,12 +1,35 @@
 working_dir="/home/vant/MásterBioinformática/LinuxAvanzado/PrácticaFinal/decont"
 
-# run STAR for all trimmed files
-for fname in "${working_dir}/out/trimmed/"*.fastq.gz
+#Variable de control para la primera ejecución
+first_run=true
+
+#Procesa los logs de cutadapt
+for fname in "${working_dir}/log/cutadapt/"*.log
 do
-    # you will need to obtain the sample ID from the filename
-    sid=$(basename "$fname" .trimmed.fastq.gz)
-    mkdir -p out/star/$sid
-    STAR --runThreadN 4 --genomeDir res/contaminants_idx \
-         --outReadsUnmapped Fastx --readFilesIn "$fname" \
-         --readFilesCommand gunzip -c --outFileNamePrefix "${working_dir}/out/star/${sid}/"
-done 
+    base_name=$(basename "$fname" .log)
+    timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    
+    #Añadir dos saltos de línea para el primer registro del log (primera ejecución de este for)
+    if [ "$first_run" = true ]; then
+        echo -e "\n\nCUTADAPT $base_name $timestamp\n" >> "${working_dir}/log/pipeline.log"
+        first_run=false
+    else 
+        echo -e "\nCUTADAPT $base_name $timestamp\n" >> "${working_dir}/log/pipeline.log"
+    fi
+    
+    grep "Reads with adapters:" "$fname" >> "${working_dir}/log/pipeline.log"
+    grep "Total basepairs processed:" "$fname" >> "${working_dir}/log/pipeline.log"
+    
+done
+
+#Procesa los logs de STAR
+for fname in "${working_dir}/out/star/"*/
+do
+    base_name=$(basename "${fname%/}") #Elimina la barra final para que basename no devuelva cadena vacía
+    timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    echo -e "\nSTAR $base_name $timestamp\n" >> "${working_dir}/log/pipeline.log"
+    grep "Uniquely mapped reads %" "${fname}Log.final.out" >> "${working_dir}/log/pipeline.log"
+    grep "% of reads mapped to multiple loci" "${fname}Log.final.out" >> "${working_dir}/log/pipeline.log"
+    grep "% of reads mapped to too many loci" "${fname}Log.final.out" >> "${working_dir}/log/pipeline.log"
+    
+done
